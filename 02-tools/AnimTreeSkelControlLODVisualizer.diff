@@ -1,0 +1,309 @@
+--- a/Development/Src/UTGame/Classes/UTPawn.uc	So maj 26 13:25:37 2012
++++ b/Development/Src/UTGame/Classes/UTPawn.uc	N paü 13 13:13:27 2013
+@@ -311,6 +311,15 @@ enum EWeapAnimType
+ 	EWAT_Stinger
+ };
+ 
++enum EDebugDisplayType
++{
++	EDDT_AnimTree,		// animtree visualizer
++	EDDT_SkelControls,	// skel controls
++	EDDT_LODs,			// LOD information
++};
++/** valid only when bDebug == true; allows distinguishing between debug display modes to draw */
++var(Debug) EDebugDisplayType DebugDisplayType;
++
+ replication
+ {
+ 	if ( bNetOwner && bNetDirty )
+@@ -5325,6 +5334,203 @@ exec function HandDamp(float LinDamp)
+ 	//`log("Hip Damp set to "$LinDamp);
+ }
+ 
++simulated function Tick(float DeltaTime)
++{
++	super.Tick(DeltaTime);
++	
++	if (bDebug)
++	{
++		switch (DebugDisplayType)
++		{
++			case EDDT_AnimTree:
++				ATV_DrawAnimTreeVisualizer();
++				break;
++			case EDDT_SkelControls:
++				ATV_DrawSkelControlVisualizer();
++				break;
++			case EDDT_LODs:
++				DrawLODsVisualizer();
++				break;
++		}		
++	}
++}
++
++/** AnimTreeVisualizer: helper function - converts a fraction from the [0..1] range to an ASCII progress bar */
++private simulated function string ATV_GetProgressBar(float f)
++{
++	local int i, bars;
++	local string s;
++	bars = Round(FClamp(f, 0.f, 1.f) * 10.f);
++	for (i = 0; i < bars; ++i)
++		s $= "I";
++	while (i++ < 10)
++		s $= " ";
++	return "[" $ s $ "]";
++}
++
++/** AnimTreeVisualizer: actual tree traversal, returns the debug string for the given node */
++private simulated function string ATV_GetAnimNodeDebug(AnimNode Node, string margin)
++{
++	local int i, numRelevant;
++	local string s;
++	local AnimNodeBlendBase blend;
++	local AnimNodeSequence seq;
++	local AnimNodeSequenceBlendBase SBB;
++
++	if (Node == none)
++		return "[none]";
++	else if (Node.NodeName != '')
++		s = string(Node.NodeName);
++	else if (Node.IsA('AnimTree'))
++		s = string(AnimTree(Node).AnimTreeTemplate);
++	else if (Node.IsA('AnimNodeBlendByProperty'))
++		s = "Blend By" @ AnimNodeBlendByProperty(Node).PropertyName;
++	else
++		s = string(Node.Name);
++	
++	// 
++	blend = AnimNodeBlendBase(Node);
++	seq = AnimNodeSequence(Node);
++	SBB = AnimNodeSequenceBlendBase(Node);
++	if (blend != none)
++	{
++		for (i = 0; i < blend.Children.Length; ++i)
++		{
++			if (blend.Children[i].Anim == none || !blend.Children[i].Anim.bRelevant)
++				continue;
++			++numRelevant;
++		}
++		if (numRelevant > 1)
++		{
++			s $= "\n";
++			for (i = 0; i < blend.Children.Length; ++i)
++			{
++				if (blend.Children[i].Anim == none || !blend.Children[i].Anim.bRelevant)
++					continue;
++				--numRelevant;
++				s $= margin $ "I_#" $ i @ ATV_GetProgressBar(blend.Children[i].Weight) @ blend.Children[i].Name $ ":"
++					@ ATV_GetAnimNodeDebug(blend.Children[i].Anim, margin $ (numRelevant > 0 ? "I  " : "   ")) $ (numRelevant > 0 ? "\n" : "");
++			}
++		}
++		else if (numRelevant > 0)
++		{
++			for (i = 0; i < blend.Children.Length; ++i)
++			{
++				if (blend.Children[i].Anim != none && blend.Children[i].Anim.bRelevant)
++					break;
++			}
++			if (i <= blend.Children.Length)
++				s $= "\n" $ margin $ "I_" $ (blend.Children.Length > 1 ? ("#" $ i $ " ") : "") $ blend.Children[i].Name $ ":"
++					@ ATV_GetAnimNodeDebug(blend.Children[i].Anim, margin $ "   ");
++		}
++		else
++			s @= "[no relevant children]";
++	}
++	else if (seq != none)
++	{
++		s = "SEQ:" @ (seq.AnimSeq != none ? ATV_GetProgressBar(seq.CurrentTime / seq.GetAnimPlaybackLength()) : "[no  seq]") @ string(seq.AnimSeqName);
++		if (SBB != none)
++		{
++			for (i = 0; i < SBB.Anims.Length; ++i)
++			{
++				s $= "\n" $ margin $ "I_#" $ i @ ATV_GetProgressBar(SBB.Anims[i].Weight) @ SBB.Anims[i].AnimName $ ":"
++					@ SBB.Anims[i].AnimInfo.AnimSeqName;
++			}
++		}
++	}
++	else
++		s @= "*** unknown class" @ Node.Class @ "***";
++
++	return s;
++}
++
++/** anim tree visualizer entry point */
++simulated function ATV_DrawAnimTreeVisualizer()
++{
++	local UTPlayerController PC;
++	local Vector offset;
++
++	// na dedyku nie ma co rysowaƒá
++	if (class'WorldInfo'.static.GetWorldInfo().NetMode == NM_DedicatedServer)
++		return;
++
++	PC = UTPlayerController(GetALocalPlayerController());
++
++	offset = Vect(0, 0, 1) * GetCollisionHeight();
++
++	PC.AddDebugText(ATV_GetAnimNodeDebug(Mesh.Animations, ""), self, , offset, offset, MakeColor(255, 0, 0, 255));
++}
++
++/** AnimTreeVisualizer: actual control list traversal, returns the debug string for the given node */
++private simulated function string ATV_GetSkelControlDebug(name BoneName, SkelControlBase Control, string margin)
++{
++	local string s;
++
++	s = BoneName $ ":";
++	if (Control == none)
++		s @= "[none]";
++	else if (Control.ControlName != '')
++		s @= string(Control.ControlName);
++	else
++		s @= string(Control.Name);
++
++	s @= ATV_GetProgressBar(Control.ControlStrength);
++	if (Control.NextControl != none)
++		s $= "\n" $ margin $ "I_" $ ATV_GetSkelControlDebug(BoneName, Control, margin $ "   ");
++
++	return s $ "\n";
++}
++
++/** skel control visualizer entry point */
++simulated function ATV_DrawSkelControlVisualizer()
++{
++	local UTPlayerController PC;
++	local Vector offset;
++	local AnimTree AT;
++	local int i;
++	local string s;
++
++	// na dedyku nie ma co rysowaƒá
++	if (class'WorldInfo'.static.GetWorldInfo().NetMode == NM_DedicatedServer)
++		return;
++
++	PC = UTPlayerController(GetALocalPlayerController());
++
++	offset = Vect(0, 0, 1) * GetCollisionHeight();
++
++	AT = AnimTree(Mesh.Animations);
++	for (i = 0; i < AT.SkelControlLists.Length; ++i)
++		s $= ATV_GetSkelControlDebug(AT.SkelControlLists[i].BoneName, AT.SkelControlLists[i].ControlHead, "");
++
++	PC.AddDebugText(s, self, , offset, offset, MakeColor(255, 0, 0, 255));
++}
++
++/** LODs visualizer entry point */
++simulated function DrawLODsVisualizer()
++{
++	local UTPlayerController PC;
++	local Vector offset;
++	local string s;
++	local SkeletalMeshComponent SMC;
++
++	// nothing to draw on dedics
++	if (class'WorldInfo'.static.GetWorldInfo().NetMode == NM_DedicatedServer)
++		return;
++
++	PC = UTPlayerController(GetALocalPlayerController());
++
++	offset = Vect(0, 0, 1) * GetCollisionHeight();
++
++	foreach ComponentList(class'SkeletalMeshComponent', SMC)
++	{
++		if (SMC.HiddenGame)
++			continue;
++		s $= SMC.SkeletalMesh $ ":" @ SMC.PredictedLODLevel $ "\n";
++	}
++
++	PC.AddDebugText(s, self, , offset, offset, MakeColor(255, 0, 0, 255));
++}
++
+ defaultproperties
+ {
+ 	Components.Remove(Sprite)
+--- a/Development/Src/UTGame/Classes/UTPlayerController.uc	Wt mar  6 19:24:01 2012
++++ b/Development/Src/UTGame/Classes/UTPlayerController.uc	N paü 13 13:10:50 2013
+@@ -4066,7 +4081,84 @@ event bool NotifyDisconnect(string Command)
+ 	return bCleanupInProgress && !bCleanupComplete;
+ }
+ 
++simulated function UTPawn GetPawnFromCursorOrName(string NameString)
++{
++	local name n;
++	local UTPawn P;
++	local bool found;
++	local Vector POV, HitLoc, HitNorm;
++	local Rotator rot;
+ 
++	n = name(NameString);
++	found = false;
++
++	if (n != '')
++	{
++		foreach AllActors(class'UTPawn', P)
++		{
++			if (P.Name == n)
++			{
++				found = true;
++				break;
++			}
++		}
++	}
++
++	if (!found)
++	{
++		GetPlayerViewPoint(POV, rot);
++		P = UTPawn(Trace(HitLoc, HitNorm, POV + Vector(rot) * 16384, POV, true));
++		if (P == none)
++			`log("No pawn found, neither by name nor by view direction!");
++	}
++	return P;
++}
++
++exec function DebugAnimTree(optional string UTPawn, optional string Except)
++{
++	local UTPawn P;
++
++	P = GetPawnFromCursorOrName(UTPawn);
++	if (P == none)
++		return;
++
++	P.bDebug = !P.bDebug || P.DebugDisplayType != EDDT_AnimTree;
++	if (!P.bDebug)
++		RemoveDebugText(P);
++	else
++		P.DebugDisplayType = EDDT_AnimTree;
++}
++
++exec function DebugLODs(optional string UTPawn, optional string Except)
++{
++	local UTPawn P;
++
++	P = GetPawnFromCursorOrName(UTPawn);
++	if (P == none)
++		return;
++
++	P.bDebug = !P.bDebug || P.DebugDisplayType != EDDT_LODs;
++	if (!P.bDebug)
++		RemoveDebugText(P);
++	else
++		P.DebugDisplayType = EDDT_LODs;
++}
++
++exec function DebugSkelControls(optional string UTPawn, optional string Except)
++{
++	local UTPawn P;
++
++	P = GetPawnFromCursorOrName(UTPawn);
++	if (P == none)
++		return;
++
++	P.bDebug = !P.bDebug || P.DebugDisplayType != EDDT_SkelControls;
++	if (!P.bDebug)
++		RemoveDebugText(P);
++	else
++		P.DebugDisplayType = EDDT_SkelControls;
++}
++
+ defaultproperties
+ {
+ 	DesiredFOV=90.000000

@@ -1,0 +1,4 @@
+This is a patch for UDK's UTPawn.uc and UTPlayerController.uc adding an anim
+tree/skel control/LOD visualizer. Apply, then use the DebugSkelControls,
+DebugAnimTree or DebugLODs console commands. Pawn to be debugged may be
+specified as an instance name as argument, or pointed at in-game.
