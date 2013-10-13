@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "material", "03-material\material.vcxproj", "{45379A86-C45B-496A-B54A-53FCE19E87CD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ragdoll", "04-ragdoll\ragdoll.vcxproj", "{7D23EFAD-F039-4BBA-8F33-7FDF13156BBB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assert", "05-assert\05-assert.vcxproj", "{AF579A89-FA13-4185-A6F8-9592A0FB7446}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{45379A86-C45B-496A-B54A-53FCE19E87CD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{45379A86-C45B-496A-B54A-53FCE19E87CD}.Debug|Win32.Build.0 = Debug|Win32
+		{45379A86-C45B-496A-B54A-53FCE19E87CD}.Release|Win32.ActiveCfg = Release|Win32
+		{45379A86-C45B-496A-B54A-53FCE19E87CD}.Release|Win32.Build.0 = Release|Win32
+		{7D23EFAD-F039-4BBA-8F33-7FDF13156BBB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7D23EFAD-F039-4BBA-8F33-7FDF13156BBB}.Debug|Win32.Build.0 = Debug|Win32
+		{7D23EFAD-F039-4BBA-8F33-7FDF13156BBB}.Release|Win32.ActiveCfg = Release|Win32
+		{7D23EFAD-F039-4BBA-8F33-7FDF13156BBB}.Release|Win32.Build.0 = Release|Win32
+		{AF579A89-FA13-4185-A6F8-9592A0FB7446}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AF579A89-FA13-4185-A6F8-9592A0FB7446}.Debug|Win32.Build.0 = Debug|Win32
+		{AF579A89-FA13-4185-A6F8-9592A0FB7446}.Release|Win32.ActiveCfg = Release|Win32
+		{AF579A89-FA13-4185-A6F8-9592A0FB7446}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
