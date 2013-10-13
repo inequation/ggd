@@ -1,0 +1,1 @@
+Simple UDK memory corruption example. Put Crasher.uc in Development/Src/UTGame/Classes, apply the patch to UTWeap_LinkGun.uc, run any map and fire the link gun. Observe the crash several frames afterwards.

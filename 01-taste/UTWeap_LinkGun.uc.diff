@@ -1,0 +1,22 @@
+--- a/Development/Src/UTGame/Classes/UTWeap_LinkGun.uc	N paü  6 15:45:37 2013
++++ b/Development/Src/UTGame/Classes/UTWeap_LinkGun.uc	år lut  8 23:13:55 2012
+@@ -369,19 +369,11 @@ simulated function KillEndpointEffect()
+ 
+ function ConsumeAmmo( byte FireModeNum )
+ {
++	local Crasher CrashComp;
++	local ActorComponent Comp;
++
+ 	if ( bAutoCharge && (Role == ROLE_Authority) )
+ 	{
+ 		SetTimer(RechargeRate+1.0, false, 'RechargeAmmo');
+ 	}
+ 	super.ConsumeAmmo(FireModeNum);
++
++	// lgodlewski: crash example
++	CrashComp = new class'Crasher';
++	Comp = new class'ActorComponent' (CrashComp);
++	AttachComponent(Comp);
+ }
+ 
+ /** ConsumeBeamAmmo()
