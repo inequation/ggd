@@ -35,7 +35,9 @@ class Object
 {
 public:
 	// an index uniquely identifies an object
-	Object(string InName, Material *InMaterial) : Name(InName), ObjMaterial(nullptr)
+	Object(string InName, Material *InMaterial)
+		: Name(InName)
+		, ObjMaterial(nullptr)
 	{
 		// use the setter on purpose to use the "game logic"
 		SetMaterial(InMaterial);
@@ -43,7 +45,8 @@ public:
 
 	inline string GetName() const {return Name;}
 
-	// setter for material reference - emulates the presence of additional game logic
+	// setter for material reference - emulates the presence of additional
+	// game logic
 	inline void SetMaterial(Material *InMaterial)
 	{
 		if (ObjMaterial == InMaterial)
@@ -63,7 +66,9 @@ static inline void InitObject(Object*& ObjPtr, int Index)
 	stringstream Builder;
 	Builder << "Object" << Index;
 	ObjPtr = new Object(Builder.str(), new Material());
-	// this is the culprit we're looking for: for every 30 objects, have 10 have their material reset
+
+	// this is the culprit we're looking for: for every 30 objects, have 10
+	// have their material reset
 	if ((Index / 10) % 3 == 2)
 		ObjPtr->SetMaterial(nullptr);
 }
@@ -74,23 +79,23 @@ int main(int argc, char *argv[])
 	static const size_t ObjectCount = 100000;
 	vector<Object *> Objects(ObjectCount);
 	for (size_t i = 0; i < Objects.size(); ++i)
-	{
 		InitObject(Objects[i], i);
-	}
 
 	// emulate main game loop
 	while (true)
 	{
 		for (auto it = Objects.begin(); it != Objects.end(); it++)
 		{
-			// emulate some gameplay-related state changes, reflected in changing the material
+			// emulate some gameplay-related state changes, reflected in
+			// changing the material
 			const int Chance = rand() % 100;
 			if (Chance < 40)
 				(*it)->SetMaterial(new Material);
 		}
 	}
 
-	// no need to clean up since the loop above never exits and this program is just for educational purposes :)
+	// no need to clean up since the loop above never exits and this program is
+	// just for educational purposes :)
 
 	return 0;
 }
