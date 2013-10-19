@@ -1,3 +1,8 @@
+// Noise filtering sample "ragdoll"
+// Emulates a slice of a game engine - creation of some objects, then a
+// rudimentary main game loop.
+// Illustrated techniques: data breakpoint/watchpint
+
 #include <vector>
 #include <cmath>
 #include <cstdio>
@@ -9,7 +14,10 @@ struct Vector3
 	Vector3(float InX, float InY, float InZ) : X(InX), Y(InY), Z(InZ) {}
 	Vector3(float InXYZ) : X(InXYZ), Y(InXYZ), Z(InXYZ) {}
 
-	inline Vector3 operator+(const Vector3& Other) {return Vector3(X + Other.X, Y + Other.Y, Z + Other.Z);}
+	inline Vector3 operator+(const Vector3& Other)
+	{
+		return Vector3(X + Other.X, Y + Other.Y, Z + Other.Z);
+	}
 
 	inline Vector3& operator+=(const Vector3& Other)
 	{
@@ -42,18 +50,27 @@ public:
 	}
 	CharacterState;
 
-	// initialize to normal state, located at (0 0 0), with a random offset to life time, and clear ragdoll position
-	Character(int InIndex) : Index(InIndex), State(ECS_Normal), Location(0.f), LifeTime((float)(rand() % 120)), RagdollLocation(0.f) {}
+	// initialize to normal state, located at (0 0 0), with a random offset to
+	// life time, and clear ragdoll position
+	Character(int InIndex)
+		: Index(InIndex)
+		, State(ECS_Normal)
+		, Location(0.f)
+		, LifeTime((float)(rand() % 120))
+		, RagdollLocation(0.f)
+	{}
 	inline int GetIndex() const {return Index;}
 	inline Vector3 GetLocation() const {return Location;}
 	
-	// moves this object by Delta; separate method to emulate the game logic that usually comes with it - shortcut scene graph reconstruction etc.
+	// moves this object by Delta; separate method to emulate the game logic
+	// that usually comes with it - shortcut scene graph reconstruction etc.
 	inline void RelativeMove(const Vector3& Delta)
 	{
 		SetLocation(Location + Delta);
 	}
 
-	// setter to emulate the game logic that usually comes with it - scene graph reconstruction etc.
+	// setter to emulate the game logic that usually comes with it - scene graph
+	// reconstruction etc.
 	inline void SetLocation(const Vector3& NewLoc) {
 		Location = NewLoc;
 	}
@@ -75,11 +92,13 @@ public:
 
 	// tells the object to die; separate method to emulate game logic
 	inline void Die() {
-		printf("Character #%d dying at: (%3.4f %3.4f %3.4f) ", Index, Location.X, Location.Y, Location.Z);
+		printf("Character #%d dying at: (%3.4f %3.4f %3.4f) ", Index,
+			Location.X, Location.Y, Location.Z);
 		// here we only start the ragdoll upon "death"
 		//UpdateRagdollPositionsFromCharacter();
 		StartRagdoll();
-		printf("Dead at: (%3.4f %3.4f %3.4f)\n", Location.X, Location.Y, Location.Z);
+		printf("Dead at: (%3.4f %3.4f %3.4f)\n",
+			Location.X, Location.Y, Location.Z);
 	}
 
 	// utility function to bring ragdoll in line with the character's animation

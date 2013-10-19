@@ -1,3 +1,8 @@
+// Noise filtering sample "material"
+// Emulates a slice of a game engine - creation of some objects, then a
+// rudimentary main game loop.
+// Illustrated techniques: breakpoint conditions, DebugBreak()
+
 #include <vector>
 #include <string>
 #include <sstream>

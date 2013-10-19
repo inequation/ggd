@@ -1,4 +1,7 @@
-// this is a Windows-only sample due to the MS CRT assertion that allows ignoring
+// Noise filtering sample "assert"
+// Emulates an annoying, non-disablable assertion in a part of code we have no
+// control over.
+// Illustrated techniques: in-memory CPU opcode edition
 
 #include <crtdbg.h>
 
