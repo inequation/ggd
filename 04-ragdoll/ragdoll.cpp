@@ -77,6 +77,7 @@ public:
 	inline void Die() {
 		printf("Character #%d dying at: (%3.4f %3.4f %3.4f) ", Index, Location.X, Location.Y, Location.Z);
 		// here we only start the ragdoll upon "death"
+		//UpdateRagdollPositionsFromCharacter();
 		StartRagdoll();
 		printf("Dead at: (%3.4f %3.4f %3.4f)\n", Location.X, Location.Y, Location.Z);
 	}
@@ -106,10 +107,6 @@ void Character::TickPhysics(float DeltaTime)
 	{
 		// normal state - some simple periodical motion
 		SetLocation(Vector3(sinf(LifeTime), cosf(LifeTime), Location.Z));
-		// randomly die
-		const int Chance = rand() % 100;
-		if (Chance < 10)
-			Die();
 	}
 	else
 	{
@@ -135,7 +132,13 @@ int main(int argc, char *argv[])
 	while (true)
 	{
 		for (auto it = Characters.begin(); it != Characters.end(); it++)
+		{
 			(*it)->TickPhysics(0.167f);
+			// randomly die
+			const int Chance = rand() % 100;
+			if (Chance < 10)
+				(*it)->Die();
+		}
 	}
 
 	return 0;
