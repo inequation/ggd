@@ -1,4 +1,6 @@
 #include <vector>
+#include <string>
+#include <sstream>
 using namespace std;
 
 #if _WIN32 || _WIN64
@@ -33,13 +35,13 @@ class Object
 {
 public:
 	// an index uniquely identifies an object
-	Object(int InIndex, Material *InMaterial) : Index(InIndex), ObjMaterial(nullptr)
+	Object(string InName, Material *InMaterial) : Name(InName), ObjMaterial(nullptr)
 	{
 		// use the setter on purpose to use the "game logic"
 		SetMaterial(InMaterial);
 	}
 
-	inline int GetIndex() const {return Index;}
+	inline string GetName() const {return Name;}
 
 	// setter for material reference - emulates the presence of additional game logic
 	inline void SetMaterial(Material *InMaterial)
@@ -51,9 +53,20 @@ public:
 	}
 
 private:
-	int			Index;
+	string		Name;
 	Material	*ObjMaterial;
 };
+
+static inline void InitObject(Object*& ObjPtr, int Index)
+{
+	// create the object
+	stringstream Builder;
+	Builder << "Object" << Index;
+	ObjPtr = new Object(Builder.str(), new Material());
+	// this is the culprit we're looking for: for every 30 objects, have 10 have their material reset
+	if ((Index / 10) % 3 == 2)
+		ObjPtr->SetMaterial(nullptr);
+}
 
 int main(int argc, char *argv[])
 {
@@ -62,11 +75,7 @@ int main(int argc, char *argv[])
 	vector<Object *> Objects(ObjectCount);
 	for (size_t i = 0; i < Objects.size(); ++i)
 	{
-		// create the object
-		Objects[i] = new Object(i, new Material());
-		// this is the culprit we're looking for: for every 30 objects, have 10 have their material reset
-		if ((i / 10) % 3 == 0)
-			Objects[i]->SetMaterial(nullptr);
+		InitObject(Objects[i], i);
 	}
 
 	// emulate main game loop
